@@ -1,5 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+// NOTE: Needed for EntityId
+#if UNITY_6000_4_OR_NEWER
+using UnityEngine;
+#endif
 
 namespace Toolbox.Editor
 {
@@ -8,17 +12,30 @@ namespace Toolbox.Editor
 
     public static class ToolboxEditorHandler
     {
+#if UNITY_6000_4_OR_NEWER
+        private static EntityId lastCachedEditorId;
+#else
         private static int lastCachedEditorId;
+#endif
         private static Editor lastCachedEditor;
         private static readonly Stack<Editor> cachedEditors = new Stack<Editor>();
 
         private static void OnBeginEditor(Editor editor)
         {
+#if UNITY_6000_4_OR_NEWER
+            var lastId = lastCachedEditor != null ? lastCachedEditor.GetEntityId() : default;
+#else
+            var lastId = lastCachedEditor != null ? lastCachedEditor.GetInstanceID() : default;
+#endif
             //NOTE: it means that last Editor was null or disposed, anyway we probably want to reload drawers-related cache
-            if (lastCachedEditor == null || lastCachedEditorId != lastCachedEditor.GetInstanceID())
+            if (lastCachedEditor == null || lastCachedEditorId != lastId)
             {
                 lastCachedEditor = editor;
+#if UNITY_6000_4_OR_NEWER
+                lastCachedEditorId = editor.GetEntityId();
+#else
                 lastCachedEditorId = editor.GetInstanceID();
+#endif
                 OnEditorReload?.Invoke();
             }
 
